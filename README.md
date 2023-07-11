@@ -1,0 +1,2 @@
+# AdBlockerX
+AdBlockerX
