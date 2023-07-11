@@ -1,0 +1,270 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "atlres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 中文(简体) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE LANG_CHINESE, SUBLANG_NEUTRAL
+#pragma code_page(936)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "D:\\sourceCode\\vsProject\\AdBlockerX\\AdBlockerX\\res\\AdBlocker.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 105, 97
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 9, "Segoe UI", 0, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,26,73,50,14
+    CTEXT           "AdBlockerX v1.0\n\n(c) Copyright 2023",IDC_LAB_ABOUT,7,31,92,32
+    ICON            IDR_MAINFRAME,IDC_STATIC,46,9,20,20
+    CTEXT           "https://www.plt-labs.com",IDC_LAB_HOME_PAGE,12,59,80,8
+END
+
+IDD_MAINDLG DIALOGEX 0, 0, 142, 103
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CAPTION | WS_SYSMENU
+CAPTION "AdBlockerX"
+FONT 9, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "隐藏",ID_BTN_HIDE,44,80,50,14
+    PUSHBUTTON      "?",ID_APP_ABOUT,119,3,17,14
+    RTEXT           "捕捉热键：",IDC_CATCH_HOTKEY,1,27,38,8,0,WS_EX_TRANSPARENT
+    LTEXT           "ALT+W",IDC_LAB_CATCH_KEY,43,27,61,11,0,WS_EX_STATICEDGE
+    PUSHBUTTON      "设置",IDC_BTN_SET_CAPTURE_KEY,107,25,26,14
+    RTEXT           "呼出菜单：",IDC_CATCH_HOTKEY2,1,41,38,8,0,WS_EX_TRANSPARENT
+    LTEXT           "ALT+X",IDC_LAB_POPMENU_KEY,43,41,61,11,0,WS_EX_STATICEDGE
+    PUSHBUTTON      "设置",IDC_BTN_SET_POPMENU_KEY,107,39,26,14
+    COMBOBOX        IDC_COMBO_LANGUAGE,72,4,44,30,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    RTEXT           "呼出窗口：",IDC_LAB_MWND,1,55,38,8,0,WS_EX_TRANSPARENT
+    LTEXT           "ALT+M",IDC_LAB_MWND_KEY,43,55,61,11,0,WS_EX_STATICEDGE
+    PUSHBUTTON      "设置",IDC_BTN_SET_MWND_KEY,107,53,26,14
+    CONTROL         "随系统启动",IDC_CHK_ADD_STARTUP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,5,57,10,WS_EX_TRANSPARENT
+    CTEXT           "Upgrade to V 0.0.0.0",IDC_HREF_NEW_VER,30,68,80,10,NOT WS_VISIBLE | NOT WS_GROUP
+END
+
+IDD_TIP_WINDOW DIALOGEX 0, 0, 338, 524
+STYLE DS_SETFONT | DS_3DLOOK | WS_POPUP | WS_BORDER
+FONT 9, "宋体", 400, 0, 0x0
+BEGIN
+    LTEXT           "",IDC_TIP_TEXT,55,42,74,8
+END
+
+IDD_SYS_MENU DIALOGEX 0, 0, 68, 58
+STYLE DS_SETFONT | DS_3DLOOK | WS_POPUP | WS_BORDER
+FONT 9, "宋体", 400, 0, 0x0
+BEGIN
+    LTEXT           "K : KillProc\nH : HideSel\nD : DisbSel\nE : EnabSel\nL : LoclExplor\nB : BlackExe",IDC_LAB_MENU_LIST,6,4,56,49
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        RIGHTMARGIN, 103
+        BOTTOMMARGIN, 95
+    END
+
+    IDD_MAINDLG, DIALOG
+    BEGIN
+        RIGHTMARGIN, 141
+        BOTTOMMARGIN, 101
+    END
+
+    IDD_TIP_WINDOW, DIALOG
+    BEGIN
+        RIGHTMARGIN, 189
+        BOTTOMMARGIN, 93
+    END
+
+    IDD_SYS_MENU, DIALOG
+    BEGIN
+        RIGHTMARGIN, 46
+        BOTTOMMARGIN, 57
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_MAINDLG AFX_DIALOG_LAYOUT
+BEGIN
+    0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 0
+END
+
+IDD_TIP_WINDOW AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_SYS_MENU AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_ABOUTBOX AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,2,2,4
+ PRODUCTVERSION 1,2,2,4
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "000404b0"
+        BEGIN
+            VALUE "CompanyName", "替计划实验室 - PLAN T LABS"
+            VALUE "FileDescription", "AdBlockerX Module"
+            VALUE "FileVersion", "1.2.2.4"
+            VALUE "InternalName", "AdBlockerX"
+            VALUE "LegalCopyright", "Copyright 2023"
+            VALUE "OriginalFilename", "AdBlockerX.exe"
+            VALUE "ProductName", "AdBlockerX Module"
+            VALUE "ProductVersion", "1.2.2.4"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x4, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDR_MAINFRAME           "AdBlockerX"
+END
+
+#endif    // 中文(简体) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// 英语(美国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""atlres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS
+BEGIN
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY 
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT
+END
+
+#endif    // 英语(美国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
