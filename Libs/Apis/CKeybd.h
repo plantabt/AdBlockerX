@@ -26,8 +26,9 @@ public:
 	static BYTE GetKeyCode(const string &keyname);
 	static void SetHotKeys(HWND hMainWind, const string &name, WORD ctrlId, const string &keyNames);
 	static HOT_KEY_MAP GetCurrentKeys();
+	static void WeakupScan();
 private:
-
+	
 	static LRESULT CALLBACK KeybdHookll(int nCode, WPARAM wParam, LPARAM lParam);
 	static void Init();
 	static map<string, pair<WORD, string>> m_hotKeys;

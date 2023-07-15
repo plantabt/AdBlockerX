@@ -1,12 +1,11 @@
 
 #include "CKeybd.h"
-
-
 CKeybd::HOT_KEY_MAP CKeybd::g_currKeys;
 CKeybd::HOT_KEY_MAP CKeybd::m_keyMap;
 map<string, pair<WORD, string>> CKeybd::m_hotKeys;
 HWND CKeybd::hMainWindow=NULL;
 HHOOK CKeybd::hkbd=NULL;
+static DWORD heartbeat = 1, oldheartbeat = 0;
 string CKeybd::GetKeyName(BYTE vkey) {
 	if (m_keyMap.size() == 0) {
 		Init();
@@ -37,10 +36,20 @@ void CKeybd::HotKeyUp(BYTE key)
 	g_currKeys.erase(key);
 }
 
+
+void CKeybd::WeakupScan(){
+	if (oldheartbeat == heartbeat) {
+		if (hkbd != NULL){
+			UnhookWindowsHookEx(hkbd);
+		}
+		hkbd = SetWindowsHookEx(WH_KEYBOARD_LL, KeybdHookll, NULL, NULL);
+	}
+	oldheartbeat = heartbeat;
+}
 void CKeybd::SetHotKeys(HWND hMainWind,const string &name,WORD ctrlId, const  string &keyNames) {
 	if (hkbd == NULL) {
 		hMainWindow = hMainWind;
-		hkbd = SetWindowsHookEx(WH_KEYBOARD_LL, KeybdHookll, GetModuleHandle(0), NULL);
+		hkbd = SetWindowsHookEx(WH_KEYBOARD_LL, KeybdHookll, NULL, NULL);
 	}
 	m_hotKeys[name] = make_pair(ctrlId,keyNames);
 }
@@ -50,7 +59,8 @@ LRESULT CALLBACK CKeybd::KeybdHookll(int nCode, WPARAM wParam, LPARAM lParam)
 	LRESULT ret = 0;
 	if (nCode == HC_ACTION)
 	{
-		KBDLLHOOKSTRUCT* pKeyboardStruct = reinterpret_cast<KBDLLHOOKSTRUCT*>(lParam);
+		heartbeat++;
+		KBDLLHOOKSTRUCT* pKeyboardStruct = (KBDLLHOOKSTRUCT*)(lParam);
 		BYTE key = pKeyboardStruct->vkCode;
 		if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)
 		{
@@ -75,7 +85,8 @@ LRESULT CALLBACK CKeybd::KeybdHookll(int nCode, WPARAM wParam, LPARAM lParam)
 					if (is_allhit) {
 						//´¥·¢ÈÈ¼ü
 						is_allhit = false;
-						return SendMessage(hMainWindow, WM_HOTKEY_LL, n.second.first, key);
+						ret = SendMessage(hMainWindow, WM_HOTKEY_LL, n.second.first, key);
+						if (ret != 0)return ret;
 					}
 				}
 				

@@ -15,6 +15,7 @@
 #include <fstream>
 
 
+
 #define COMMONSET "COMMON"
 #define ZH_CN "ZH_CN"
 #define EN_US "EN_US"
@@ -68,6 +69,11 @@ LRESULT WINAPI ThreadUpdateProc(DWORD arg);
 CComboBox m_comboLan;
 CMainDlg *gMainDlg = NULL;
 string g_tip_fmt = "";
+
+static DWORD heartbeat = 1, oldheartbeat = 0;
+bool IsMsg = false;
+
+#define SCAN_TIMER 100
 LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
 	
@@ -89,7 +95,9 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	::SetWindowLongPtr(g_tipDlg, GWL_EXSTYLE, ::GetWindowLongPtr(g_tipDlg, GWL_EXSTYLE) | WS_EX_TOOLWINDOW );//524288
 
 	gMouseHook = SetWindowsHookEx(WH_MOUSE_LL, MouseHookCallback, NULL, 0);
-
+	
+	//CreateThread(0, 0, (LPTHREAD_START_ROUTINE)mousehookScan, 0, 0, &gpid);
+	
 	string exePath = APIS::Sys.PROCESS.GetCurrentAppFullPath();
 	string caption = APIS::Sys.RES.GetFileVersionItem(exePath, APIS::Sys.RES.VER_INTERNAL_NAME)+" " + APIS::Sys.RES.GetApplicationVersion(); //APIS::Sys.RES.LoadStringFromResource(ID_VERSION);
 	if (APIS::Sys.SYSTEM.IsAnotherInstanceRunning(APP_NAME)) {
@@ -133,7 +141,7 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	else {
 		ShowWindow(SW_SHOW);
 	}
-	//SetTimer(SCAN_TIMER, 10, NULL);
+	SetTimer(SCAN_TIMER, 5000, NULL);
 	CreateThread(0, 0, (LPTHREAD_START_ROUTINE)ThreadUpdateProc, 0, 0, 0);
 	return TRUE;
 }
@@ -251,15 +259,34 @@ void CMainDlg::ReadConfig() {
 	CPopSysMenu::getInstance()->Init(CMainDlg::m_curr_lang);
 	//APIS::Keybd.SetHotKeys(m_hWnd, "KEYS_6", CTRL_HOT_KEY_6, "6");
 }
+
+
+LRESULT mousehookScan(DWORD arg) {
+
+	while (true) {
+		if (oldheartbeat == heartbeat) {
+			if (gMouseHook != NULL) {
+				UnhookWindowsHookEx(gMouseHook);
+				UnhookWindowsHook(0, MouseHookCallback);
+			}
+			gMouseHook = SetWindowsHookEx(WH_MOUSE_LL, MouseHookCallback, 0,0 );
+		}
+		oldheartbeat = heartbeat;
+		Sleep(5000);//5秒检测一次hook是否脱钩
+	}
+	return 0;
+}
 // 监听鼠标移动消息的回调函数
 LRESULT CALLBACK MouseHookCallback(int nCode, WPARAM wParam, LPARAM lParam)
 {
-
+	heartbeat++;
 	if (nCode >= 0 && wParam == WM_MOUSEMOVE)
 	{
+		
 		TipWindow();
 
 	}else if (CPopSysMenu::getInstance()->IsShow()) {
+
 		CPopSysMenu::getInstance()->Show(!CPopSysMenu::getInstance()->IsShow());
 		return 1;
 	}
@@ -377,7 +404,7 @@ void SetTipWindowText() {
 void TipWindow() {
 	static bool isTopmost = false;
 
-	
+	static HWND oldHwnd = NULL;
 	
 	POINT point;
 	
@@ -385,32 +412,41 @@ void TipWindow() {
 	
 	if (g_showTip) {
 		GetCursorPos(&point);
-
+		g_catched_window = GetCursorPosWindow();
+		HWND rootWnd = APIS::Sys.WINDOW.GetRootWindow(g_catched_window);
+		if ((rootWnd == g_mainWindow) || (rootWnd == CPopSysMenu::getInstance()->m_hWnd) || (rootWnd == g_tipDlg) || GetCurrentProcessId() == APIS::Sys.PROCESS.GetProcessIdFromWindow(g_catched_window)) {
+			g_catched_window = oldHwnd;
+		}
+		else {
+			oldHwnd = g_catched_window;
+		}
 		APIS::Sys.DC.GetCtrlTextSize(g_tipDlg, IDC_TIP_TEXT, &txSize);
 		
 		if ((APIS::Sys.WINDOW.GetRootWindow(APIS::Sys.WINDOW.GetTopmostWindow())!=g_mainWindow) && (APIS::Sys.WINDOW.GetTopmostWindow() != g_tipDlg)) {
 			if (!AdjustWindowPosition(g_tipDlg, txSize.cx, txSize.cy)) {
-				SetWindowPos(g_tipDlg, HWND_TOPMOST, point.x + 12, point.y - txSize.cy, txSize.cx, txSize.cy - 4, SWP_SHOWWINDOW);
+				SetWindowPos(g_tipDlg, HWND_TOPMOST, point.x + 22, point.y - txSize.cy, txSize.cx, txSize.cy - 4, SWP_SHOWWINDOW);
 			}
 		}
 		if (!::IsWindowVisible(g_tipDlg)) {
-			SetWindowPos(g_tipDlg, HWND_TOPMOST, point.x + 12, point.y - txSize.cy, txSize.cx, txSize.cy - 4, SWP_SHOWWINDOW);
+			SetWindowPos(g_tipDlg, HWND_TOPMOST, point.x + 22, point.y - txSize.cy, txSize.cx, txSize.cy - 4, SWP_SHOWWINDOW);
 		}
-		g_catched_window = GetCursorPosWindow();
-		if ((APIS::Sys.WINDOW.GetRootWindow(g_catched_window) == g_tipDlg) || (GetAncestor(g_catched_window, GA_ROOT) == CPopSysMenu::getInstance()->m_hWnd)) {
+		/*
+
+		if ((rootWnd == g_tipDlg) || (rootWnd == CPopSysMenu::getInstance()->m_hWnd)) {
 			
 			if(!AdjustWindowPosition(g_tipDlg, txSize.cx, txSize.cy)){
-				::MoveWindow(g_tipDlg, point.x + 12, point.y - txSize.cy, txSize.cx, txSize.cy - 4, TRUE);
+				::MoveWindow(g_tipDlg, point.x + 22, point.y - txSize.cy, txSize.cx, txSize.cy - 4, TRUE);
 			}
 			
 			return;
 		}
+		*/
 		//DeleteDC(hdc);
 		SetTipWindowText();
 
 		
 		if (!AdjustWindowPosition(g_tipDlg,txSize.cx, txSize.cy)) {
-			::MoveWindow(g_tipDlg, point.x + 12, point.y - txSize.cy, txSize.cx, txSize.cy - 4, TRUE);
+			::MoveWindow(g_tipDlg, point.x + 22, point.y - txSize.cy, txSize.cx, txSize.cy - 4, TRUE);
 		}
 		
 	}
@@ -444,23 +480,21 @@ bool IsWindowFullyVisible(HWND hWnd)
 
 	return isVisible;
 }
-
-LRESULT CMainDlg::OnTimer(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-	/*
-	if(wParam== SCAN_TIMER){
-		if (m_chk_add_startup.GetCheck()) {
-			if(IsWindowFullyVisible(m_hWnd)){
-				APIS::Sys.WINDOW.HideWindow(m_hWnd);
-				KillTimer(SCAN_TIMER);
-			}
-			
+void WeakupScan() {
+	if (oldheartbeat == heartbeat) {
+		if (gMouseHook != NULL) {
+			UnhookWindowsHookEx(gMouseHook);
 		}
-		else {
-			KillTimer(SCAN_TIMER);
-		}
+		gMouseHook = SetWindowsHookEx(WH_MOUSE_LL, MouseHookCallback, 0, 0);
 	}
-	*/
-	//TipWindow();
+	oldheartbeat = heartbeat;
+}
+LRESULT CMainDlg::OnTimer(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+	
+	if(wParam== SCAN_TIMER){
+		APIS::Keybd.WeakupScan();
+		WeakupScan();
+	}
 	return true;
 }
 LRESULT CMainDlg::OnComboSelChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
@@ -606,6 +640,24 @@ LRESULT CMainDlg::OnCtlColorStatic(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 	*/
 	return 0;
 }
+
+LRESULT CALLBACK BlockThreadProc(DWORD arg) {
+	IsMsg = true;
+	bool oldgtp = g_showTip;
+	g_showTip = false;
+	string info = "确定禁用程序吗?\nAre u sure?\n";
+	info += lpSelExePath;
+	if (MessageBox(0,info.c_str(), "禁用程序 BlockApp?", MB_OKCANCEL | MB_ICONWARNING) == 1) {
+
+		DWORD pid = APIS::Sys.PROCESS.GetProcessIdFromWindow(g_catched_window);
+		APIS::Sys.PROCESS.KillProcess(pid);
+		APIS::PeEngine.LockOEP(lpSelExePath);
+		MessageBox(0,"Success!!!", "禁用成功!", MB_OK | MB_ICONINFORMATION);
+	}
+	g_showTip = oldgtp;
+	IsMsg = false;
+	return 0;
+}
 LRESULT CMainDlg::OnHotkeyLL(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 	LRESULT ret = 0;
 	if(wParam==-1){
@@ -627,32 +679,37 @@ LRESULT CMainDlg::OnHotkeyLL(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BO
 
 
 		if (title_capture == TXT_OK) {
+			ret = 1;
 			m_label_capture_key.SetWindowText(keys.c_str());
+			
 			return 1;
 		}
 
 		if (title_popmenu == TXT_OK) {
+			ret = 1;
 			m_label_popmenu_key.SetWindowText(keys.c_str());
 			return 1;
 		}
 	}else if (wParam == CTRL_HOT_KEY_CAPTURE) {
+		ret = 1;
 		g_showTip = !g_showTip;
 		g_catched_window = GetCursorPosWindow();
 		SetTipWindowText();
 		TipWindow();
-		ret = 1;
+		
 	}else if (wParam == CTRL_HOT_KEY_POPMENU) {
 		if(g_showTip){
-			CPopSysMenu::getInstance()->Show(!CPopSysMenu::getInstance()->IsShow());
 			ret = 1;
+			CPopSysMenu::getInstance()->Show(!CPopSysMenu::getInstance()->IsShow());
+
 		}
 	}
 	else if (wParam == CTRL_HOT_KEY_MWND) {
-		IsWindowVisible() ? ShowWindow(SW_HIDE) : APIS::Sys.WINDOW.ActivateWindow(m_hWnd);
 		ret = 1;
+		IsWindowVisible() ? ShowWindow(SW_HIDE) : APIS::Sys.WINDOW.ActivateWindow(m_hWnd);
+		
 	}
 	else if (wParam == CTRL_HOT_KEY_ESC) {
-		//ShowWindow(g_PopSysMenu, SW_HIDE);
 		CPopSysMenu::getInstance()->Show(false);
 
 		//取消热键输入
@@ -661,72 +718,70 @@ LRESULT CMainDlg::OnHotkeyLL(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BO
 		CMainDlg::m_btn_capture_set.GetWindowText(str, sizeof(str));
 		string is = str;
 		if (is == TXT_OK) {
-			SendMessage(m_hWnd, WM_COMMAND, IDC_BTN_SET_CAPTURE_KEY, 0);
 			ret = 1;
+			SendMessage(m_hWnd, WM_COMMAND, IDC_BTN_SET_CAPTURE_KEY, 0);
 		}
 
 		CMainDlg::m_btn_popmenu_set.GetWindowText(str, sizeof(str));
 		is = str;
 		if (is == TXT_OK) {
-			SendMessage(m_hWnd, WM_COMMAND, IDC_BTN_SET_POPMENU_KEY, 0);
 			ret = 1;
+			SendMessage(m_hWnd, WM_COMMAND, IDC_BTN_SET_POPMENU_KEY, 0);
 		}
 
 		CMainDlg::m_btn_mwnd_set.GetWindowText(str, sizeof(str));
 		is = str;
 		if (is == TXT_OK) {
-			SendMessage(m_hWnd, WM_COMMAND, IDC_BTN_SET_MWND_KEY, 0);
 			ret = 1;
+			SendMessage(m_hWnd, WM_COMMAND, IDC_BTN_SET_MWND_KEY, 0);
 		}
 
 	}else if (wParam == CTRL_HOT_KEY_K) {
 		if (CPopSysMenu::getInstance()->IsShow()) {
-			DWORD pid = APIS::Sys.PROCESS.GetProcessIdFromWindow(g_catched_window);
-			APIS::Sys.PROCESS.KillProcess(pid);
-			CPopSysMenu::getInstance()->Show(false);
 			ret = 1;
+			if (APIS::Sys.PROCESS.GetProcessIdFromWindow(g_catched_window) == GetCurrentProcessId() || (APIS::Sys.WINDOW.GetRootWindow(g_catched_window) == g_tipDlg)) {
+				g_catched_window = NULL;
+				MessageBeep(0);
+				
+			}
+			else {
+				DWORD pid = APIS::Sys.PROCESS.GetProcessIdFromWindow(g_catched_window);
+				APIS::Sys.PROCESS.KillProcess(pid);
+				CPopSysMenu::getInstance()->Show(false);
+			}
+
 		}
 	}else if (wParam == CTRL_HOT_KEY_H) {
 		if (CPopSysMenu::getInstance()->IsShow()) {
+			ret = 1;
 			::ShowWindow(g_catched_window, SW_HIDE);
 			CPopSysMenu::getInstance()->Show(false);
-			ret = 1;
 		}
 	}else if (wParam == CTRL_HOT_KEY_D) {
 		if (CPopSysMenu::getInstance()->IsShow()) {
+			ret = 1;
 			::EnableWindow(g_catched_window,FALSE);
 			CPopSysMenu::getInstance()->Show(false);
-			ret = 1;
 		}
 	}else if (wParam == CTRL_HOT_KEY_E) {
 		if (CPopSysMenu::getInstance()->IsShow()) {
+			ret = 1;
 			::EnableWindow(g_catched_window, TRUE);
 			CPopSysMenu::getInstance()->Show(false);
-			ret = 1;
 		}
 	}else if (wParam == CTRL_HOT_KEY_L) {
 		if (CPopSysMenu::getInstance()->IsShow()) {
+			ret = 1;
 			CPopSysMenu::getInstance()->Show(false);
 			APIS::Files.OpenFolderAndSelectFile(lpSelExePath);
-			
-			ret = 1;
 		}
 	}else if (wParam == CTRL_HOT_KEY_B) {
 		if (CPopSysMenu::getInstance()->IsShow()) {
-			CPopSysMenu::getInstance()->Show(false);
-			bool oldgtp = g_showTip;
-			g_showTip = false;
-			string info = "确定禁用程序吗?\nAre u sure?\n";
-			info +=lpSelExePath;
-			if (MessageBox(info.c_str() , "禁用程序 BlockApp?", MB_OKCANCEL | MB_ICONWARNING) == 1) {
-				
-				DWORD pid = APIS::Sys.PROCESS.GetProcessIdFromWindow(g_catched_window);
-				APIS::Sys.PROCESS.KillProcess(pid);
-				APIS::PeEngine.LockOEP(lpSelExePath);
-				MessageBox("Success!!!", "禁用成功!", MB_OK | MB_ICONINFORMATION);
-			}
-			g_showTip = oldgtp;
 			ret = 1;
+			CPopSysMenu::getInstance()->Show(false);
+			if(!IsMsg){
+				CreateThread(0, 0, (LPTHREAD_START_ROUTINE)BlockThreadProc, 0, 0, 0);
+			}
 		}
 	}
 
