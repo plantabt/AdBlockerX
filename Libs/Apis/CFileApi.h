@@ -67,7 +67,8 @@ public:
 	
 	static string GetFileMD5(const string& filePath);
 	static string GetPathFromFullPath(const string &fullPath);
-	static DWORD LogInfo(const string& pfilepath, TCHAR* in, DWORD inSize, BOOL br);
+	static DWORD LogInfo(const string& pfilepath, const string& in,  BOOL br);
+	static DWORD LogInfo(const string& pfilepath, TCHAR* in,DWORD inSize, BOOL br);
 	static VOID CloseHandleExt(BYTE* pHandle);
 	static BYTE* ReadFileToBuff(TCHAR* pfilepath, DWORD* rdSize);
 	static DWORD GetFileSizeExt(TCHAR* pfilepath);

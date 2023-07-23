@@ -81,6 +81,7 @@ public:
 		static string GetAppFullPath();
 		static string GetCommandLineArgumentByIndex(int index);
 		static vector<string> GetCommandLineArguments();
+		static string GetCurrentTimestamp();
 	};
 	static tagSYSTEM SYSTEM;
 

@@ -1,5 +1,6 @@
 #include "CFileApi.h"
 #include <ShellAPI.h>
+
 HTTP_REQUEST_RECORD_MAP CFileApi::tagHTTP_LOG::m_RequestRecordMap;
 HTTP_CONNECT_RECORD_MAP CFileApi::tagHTTP_LOG::m_ConnectRecordMap;
 string CFileApi::tagHTTP_LOG::m_logPath;
@@ -119,7 +120,7 @@ BOOL CFileApi::SaveBuffToFile(const string& pfilepath, BYTE* in, DWORD inSize,BO
 
 }
 
-DWORD CFileApi::LogInfo(const string& pfilepath, TCHAR* in, DWORD inSize, BOOL br)
+DWORD CFileApi::LogInfo(const string& pfilepath, TCHAR* in,DWORD inSize, BOOL br)
 {
 	DWORD rd = 0;
 	//DWORD fileSize=0;
@@ -129,6 +130,27 @@ DWORD CFileApi::LogInfo(const string& pfilepath, TCHAR* in, DWORD inSize, BOOL b
 	if (hFile == INVALID_HANDLE_VALUE) 	return FALSE;
 	SetFilePointer(hFile, 0, 0, FILE_END);
 	if (!WriteFile(hFile, in, inSize, &rd, 0))
+	{
+		GetLastError();
+		CloseHandle(hFile);
+		return FALSE;
+	}
+	if (br)WriteFile(hFile, "\r\n", 2, &rd, 0);
+	CloseHandle(hFile);
+
+	return TRUE;
+
+}
+DWORD CFileApi::LogInfo(const string& pfilepath, const string& in, BOOL br)
+{
+	DWORD rd = 0;
+	//DWORD fileSize=0;
+	HANDLE hFile = 0;
+	string fullInfo = CSysApi::SYSTEM.GetCurrentTimestamp() + " " + in ;
+	hFile = CreateFile(pfilepath.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile == INVALID_HANDLE_VALUE) 	return FALSE;
+	SetFilePointer(hFile, 0, 0, FILE_END);
+	if (!WriteFile(hFile, fullInfo.c_str(), fullInfo.size(), &rd, 0))
 	{
 		GetLastError();
 		CloseHandle(hFile);

@@ -41,6 +41,7 @@
 
 #define APP_NAME "ADBLOCKX_PLANTLABS"
 #define UPGRADE_INFO "Upgrade to v%s"
+#define SCAN_TIMER 100
 
 #define PLTLABS_WEBSITE _T("https://www.plt-labs.com")
 //检查更新
@@ -53,7 +54,11 @@
 
 #endif
 */
-
+#if _DEBUG
+#define LOGINFO(Info,br)  APIS::Files.LogInfo("c:\\adblx.log",Info,br)
+#else
+#define LOGINFO(Info,br) 
+#endif
 string CMainDlg::m_curr_lang = "";
 TCHAR lpSelExePath[MAX_PATH] = { NULL };
 HWND g_catched_window = NULL;
@@ -73,11 +78,13 @@ string g_tip_fmt = "";
 static DWORD heartbeat = 1, oldheartbeat = 0;
 bool IsMsg = false;
 
-#define SCAN_TIMER 100
+
 LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
 	
 	APIS::Sys.PROCESS.EnableDebugPrivilege();
+	
+	
 
 	gMainDlg = this;
 
@@ -94,9 +101,8 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 	::SetWindowLongPtr(g_tipDlg, GWL_EXSTYLE, ::GetWindowLongPtr(g_tipDlg, GWL_EXSTYLE) | WS_EX_TOOLWINDOW );//524288
 
-	gMouseHook = SetWindowsHookEx(WH_MOUSE_LL, MouseHookCallback, NULL, 0);
+	gMouseHook = SetWindowsHookEx(WH_MOUSE_LL, MouseHookCallback, GetModuleHandle(0), 0);
 	
-	//CreateThread(0, 0, (LPTHREAD_START_ROUTINE)mousehookScan, 0, 0, &gpid);
 	
 	string exePath = APIS::Sys.PROCESS.GetCurrentAppFullPath();
 	string caption = APIS::Sys.RES.GetFileVersionItem(exePath, APIS::Sys.RES.VER_INTERNAL_NAME)+" " + APIS::Sys.RES.GetApplicationVersion(); //APIS::Sys.RES.LoadStringFromResource(ID_VERSION);
@@ -126,11 +132,15 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 	//获取第二个参数
 	string cfgPath = APIS::Sys.SYSTEM.GetCommandLineArgumentByIndex(1);
+	LOGINFO("cmdLine:"+ cfgPath, 1);
+
 	if (cfgPath == "") {
 		cfgPath = APIS::Sys.SYSTEM.GetCurrentDir() ;
 	}
 	
 	cfgPath = APIS::Strings.Format("%s\\%s", cfgPath.c_str(), CONFIG_FILE);
+	LOGINFO("cfgPath:" + cfgPath, 1);
+
 	APIS::Config.Init(cfgPath);
 
 
@@ -142,6 +152,8 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 		ShowWindow(SW_SHOW);
 	}
 	SetTimer(SCAN_TIMER, 5000, NULL);
+
+	DragAcceptFiles(TRUE);
 	CreateThread(0, 0, (LPTHREAD_START_ROUTINE)ThreadUpdateProc, 0, 0, 0);
 	return TRUE;
 }
@@ -180,9 +192,9 @@ void CMainDlg::ReadConfig() {
 	// 添加选项
 	
 
-
+	LOGINFO("-------------------SetHotKeys Begin!-------------------", 1);
 	string curLang = APIS::Config.GetValue(COMMONSET, CURRENT_LANG);
-	
+	LOGINFO("CURRENT_LANG:" + curLang, 1);
 	for (int cnt = 0; cnt < 10; cnt++) {
 		string langi = APIS::Strings.Format("LNG%d", cnt);
 		string ln = APIS::Config.GetValue(COMMONSET, langi);
@@ -206,6 +218,7 @@ void CMainDlg::ReadConfig() {
 	m_chk_add_startup.SetCheck(APIS::Strings.Str2Long(str, 10));
 
 	str = APIS::Config.GetValue(m_curr_lang, STR_SET_POPMENU);
+	LOGINFO("STR_SET_POPMENU:" + str, 1);
 	m_label_popmenu.SetWindowText(str.c_str());
 	str = APIS::Config.GetValue(m_curr_lang, STR_SETTING_BTN);
 
@@ -216,6 +229,7 @@ void CMainDlg::ReadConfig() {
 	m_btn_hide.SetWindowText(str.c_str());
 
 	str = APIS::Config.GetValue(COMMONSET, CAPTURE_HOTKEY);
+	LOGINFO("CAPTURE_HOTKEY:" + str, 1);
 	if (str == "") {
 		str = "LALT+W";
 	}
@@ -225,6 +239,7 @@ void CMainDlg::ReadConfig() {
 
 
 	str = APIS::Config.GetValue(COMMONSET, POPMENU_HOTKEY);
+	LOGINFO("POPMENU_HOTKEY:" + str, 1);
 	if (str == "") {
 		str = "LALT+X";
 	}
@@ -232,6 +247,7 @@ void CMainDlg::ReadConfig() {
 	APIS::Keybd.SetHotKeys(m_hWnd, KEYS_POPMENU, CTRL_HOT_KEY_POPMENU, str);
 
 	str = APIS::Config.GetValue(COMMONSET, MWND_HOTKEY);
+	LOGINFO("MWND_HOTKEY:" + str, 1);
 	if (str == "") {
 		str = "LALT+M";
 	}
@@ -253,29 +269,15 @@ void CMainDlg::ReadConfig() {
 	APIS::Keybd.SetHotKeys(m_hWnd, "KEYS_E", CTRL_HOT_KEY_E, "E");
 	APIS::Keybd.SetHotKeys(m_hWnd, "KEYS_L", CTRL_HOT_KEY_L, "L");
 	APIS::Keybd.SetHotKeys(m_hWnd, "KEYS_B", CTRL_HOT_KEY_B, "B");
-
+	
 	g_tip_fmt = APIS::Config.GetValue(CMainDlg::m_curr_lang, STR_CAPTURE_FINFO);
-
+	LOGINFO("STR_CAPTURE_FINFO:" + g_tip_fmt, 1);
 	CPopSysMenu::getInstance()->Init(CMainDlg::m_curr_lang);
+	LOGINFO("-------------------SetHotKeys Finish!-------------------", 1);
 	//APIS::Keybd.SetHotKeys(m_hWnd, "KEYS_6", CTRL_HOT_KEY_6, "6");
 }
 
 
-LRESULT mousehookScan(DWORD arg) {
-
-	while (true) {
-		if (oldheartbeat == heartbeat) {
-			if (gMouseHook != NULL) {
-				UnhookWindowsHookEx(gMouseHook);
-				UnhookWindowsHook(0, MouseHookCallback);
-			}
-			gMouseHook = SetWindowsHookEx(WH_MOUSE_LL, MouseHookCallback, 0,0 );
-		}
-		oldheartbeat = heartbeat;
-		Sleep(5000);//5秒检测一次hook是否脱钩
-	}
-	return 0;
-}
 // 监听鼠标移动消息的回调函数
 LRESULT CALLBACK MouseHookCallback(int nCode, WPARAM wParam, LPARAM lParam)
 {
@@ -424,11 +426,11 @@ void TipWindow() {
 		
 		if ((APIS::Sys.WINDOW.GetRootWindow(APIS::Sys.WINDOW.GetTopmostWindow())!=g_mainWindow) && (APIS::Sys.WINDOW.GetTopmostWindow() != g_tipDlg)) {
 			if (!AdjustWindowPosition(g_tipDlg, txSize.cx, txSize.cy)) {
-				SetWindowPos(g_tipDlg, HWND_TOPMOST, point.x + 22, point.y - txSize.cy, txSize.cx, txSize.cy - 4, SWP_SHOWWINDOW);
+				SetWindowPos(g_tipDlg, HWND_TOPMOST, point.x + 14, point.y - txSize.cy, txSize.cx, txSize.cy - 4, SWP_SHOWWINDOW);
 			}
 		}
 		if (!::IsWindowVisible(g_tipDlg)) {
-			SetWindowPos(g_tipDlg, HWND_TOPMOST, point.x + 22, point.y - txSize.cy, txSize.cx, txSize.cy - 4, SWP_SHOWWINDOW);
+			SetWindowPos(g_tipDlg, HWND_TOPMOST, point.x + 14, point.y - txSize.cy, txSize.cx, txSize.cy - 4, SWP_SHOWWINDOW);
 		}
 		/*
 
@@ -446,7 +448,7 @@ void TipWindow() {
 
 		
 		if (!AdjustWindowPosition(g_tipDlg,txSize.cx, txSize.cy)) {
-			::MoveWindow(g_tipDlg, point.x + 22, point.y - txSize.cy, txSize.cx, txSize.cy - 4, TRUE);
+			::MoveWindow(g_tipDlg, point.x + 14, point.y - txSize.cy, txSize.cx, txSize.cy - 4, TRUE);
 		}
 		
 	}
@@ -485,15 +487,28 @@ void WeakupScan() {
 		if (gMouseHook != NULL) {
 			UnhookWindowsHookEx(gMouseHook);
 		}
-		gMouseHook = SetWindowsHookEx(WH_MOUSE_LL, MouseHookCallback, 0, 0);
+		gMouseHook = SetWindowsHookEx(WH_MOUSE_LL, MouseHookCallback, GetModuleHandle(0), 0);
 	}
 	oldheartbeat = heartbeat;
+}
+LRESULT CMainDlg::OnDropFiles(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+	TCHAR dropPath[MAX_PATH] = { 0 };
+	DragQueryFile((HDROP)wParam, 0, dropPath, sizeof(dropPath));
+	//解锁oep
+	if (APIS::PeEngine.LockOEP(dropPath, FALSE)) {
+		MessageBox("Restore success!!!", "恢复成功!", MB_OK | MB_ICONINFORMATION);
+	}
+	DragFinish((HDROP)wParam);
+	
+	return true;
 }
 LRESULT CMainDlg::OnTimer(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 	
 	if(wParam== SCAN_TIMER){
+		LOGINFO("-------------------SCAN_TIMER Begin-------------------", 1);
 		APIS::Keybd.WeakupScan();
 		WeakupScan();
+		LOGINFO("-------------------SCAN_TIMER End!-------------------", 1);
 	}
 	return true;
 }
@@ -549,33 +564,44 @@ INT_PTR TipDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	return 0;
 }
 
+#define CANCEL_SET 0xFFFF1111
 
-LRESULT CMainDlg::OnBnClickedBtnSetCapturehKey(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+LRESULT CMainDlg::OnBnClickedBtnSetCapturehKey(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	TCHAR str[MAX_PATH] = { NULL };
 	m_btn_capture_set.GetWindowText(str,sizeof(str));
 	string is = str;
 	if (is == TXT_OK) {
+
 		string val = APIS::Config.GetValue(m_curr_lang, STR_SETTING_BTN);
 		//SetDlgItemText(IDC_BTN_SET_CAPTURE_KEY, val.c_str());
 		m_btn_capture_set.SetWindowText(val.c_str());
 		m_btn_popmenu_set.EnableWindow(TRUE);
 		m_btn_mwnd_set.EnableWindow(TRUE);
+		m_btn_hide.EnableWindow(TRUE);
+		if ((DWORD)hWndCtl == CANCEL_SET) {
+			val = APIS::Config.GetValue(COMMONSET, CAPTURE_HOTKEY);
+			m_label_capture_key.SetWindowText(val.c_str());
+		}
+		else {
+			m_label_capture_key.GetWindowText(str, sizeof(str));
+			APIS::Keybd.SetHotKeys(m_hWnd, KEYS_CAPTURE, CTRL_HOT_KEY_CAPTURE, str);
+			APIS::Config.SetValue(COMMONSET, CAPTURE_HOTKEY, str);
+		}
 
-		m_label_capture_key.GetWindowText(str,sizeof(str));
-		APIS::Keybd.SetHotKeys(m_hWnd, KEYS_CAPTURE, CTRL_HOT_KEY_CAPTURE, str);
-		APIS::Config.SetValue(COMMONSET, CAPTURE_HOTKEY, str);
+
 	}
 	else {
 
 		m_btn_capture_set.SetWindowText(TXT_OK);
 		m_btn_popmenu_set.EnableWindow(FALSE);
 		m_btn_mwnd_set.EnableWindow(FALSE);
+		m_btn_hide.EnableWindow(FALSE);
 	}
 	return 0;
 }
 
-LRESULT CMainDlg::OnBnClickedBtnSetPopmenuKey(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+LRESULT CMainDlg::OnBnClickedBtnSetPopmenuKey(WORD /*wNotifyCode*/, WORD wID, HWND hWndCtl, BOOL& /*bHandled*/)
 {
 	TCHAR str[MAX_PATH] = { NULL };
 	m_btn_popmenu_set.GetWindowText(str, sizeof(str));
@@ -585,10 +611,16 @@ LRESULT CMainDlg::OnBnClickedBtnSetPopmenuKey(WORD /*wNotifyCode*/, WORD wID, HW
 		m_btn_popmenu_set.SetWindowText(val.c_str());
 		m_btn_capture_set.EnableWindow(TRUE);
 		m_btn_mwnd_set.EnableWindow(TRUE);
-
-		m_label_popmenu_key.GetWindowText(str, sizeof(str));
-		APIS::Keybd.SetHotKeys(m_hWnd, KEYS_POPMENU, CTRL_HOT_KEY_POPMENU, str);
-		APIS::Config.SetValue(COMMONSET, POPMENU_HOTKEY, str);
+		m_btn_hide.EnableWindow(TRUE);
+		if ((DWORD)hWndCtl == CANCEL_SET) {
+			val = APIS::Config.GetValue(COMMONSET, POPMENU_HOTKEY);
+			m_label_popmenu_key.SetWindowText(val.c_str());
+		}
+		else {
+			m_label_popmenu_key.GetWindowText(str, sizeof(str));
+			APIS::Keybd.SetHotKeys(m_hWnd, KEYS_POPMENU, CTRL_HOT_KEY_POPMENU, str);
+			APIS::Config.SetValue(COMMONSET, POPMENU_HOTKEY, str);
+		}
 		
 	}
 	else {
@@ -596,6 +628,7 @@ LRESULT CMainDlg::OnBnClickedBtnSetPopmenuKey(WORD /*wNotifyCode*/, WORD wID, HW
 		m_btn_popmenu_set.SetWindowText(TXT_OK);
 		m_btn_capture_set.EnableWindow(FALSE);
 		m_btn_mwnd_set.EnableWindow(FALSE);
+		m_btn_hide.EnableWindow(FALSE);
 	}
 	return 0;
 }
@@ -651,8 +684,10 @@ LRESULT CALLBACK BlockThreadProc(DWORD arg) {
 
 		DWORD pid = APIS::Sys.PROCESS.GetProcessIdFromWindow(g_catched_window);
 		APIS::Sys.PROCESS.KillProcess(pid);
-		APIS::PeEngine.LockOEP(lpSelExePath);
-		MessageBox(0,"Success!!!", "禁用成功!", MB_OK | MB_ICONINFORMATION);
+		if (APIS::PeEngine.LockOEP(lpSelExePath, TRUE)) {
+			MessageBox(0, "Success!!!", "禁用成功!", MB_OK | MB_ICONINFORMATION);
+		}
+		
 	}
 	g_showTip = oldgtp;
 	IsMsg = false;
@@ -662,13 +697,17 @@ LRESULT CMainDlg::OnHotkeyLL(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BO
 	LRESULT ret = 0;
 	if(wParam==-1){
 		string keys = "";
-		string title_capture = "", title_popmenu = "";
+		string title_capture = "", title_popmenu = "", title_mwnd="";
 		TCHAR tmp[MAX_PATH] = { NULL };
 		m_btn_capture_set.GetWindowText(tmp, sizeof(tmp));
 		title_capture = tmp;
 
 		m_btn_popmenu_set.GetWindowText(tmp, sizeof(tmp));
 		title_popmenu = tmp;
+
+
+		m_btn_mwnd_set.GetWindowText(tmp, sizeof(tmp));
+		title_mwnd = tmp;
 
 		CKeybd::HOT_KEY_MAP keyMap = APIS::Keybd.GetCurrentKeys();
 
@@ -690,7 +729,14 @@ LRESULT CMainDlg::OnHotkeyLL(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BO
 			m_label_popmenu_key.SetWindowText(keys.c_str());
 			return 1;
 		}
+
+		if (title_mwnd == TXT_OK) {
+			ret = 1;
+			m_label_mwnd_key.SetWindowText(keys.c_str());
+			return 1;
+		}
 	}else if (wParam == CTRL_HOT_KEY_CAPTURE) {
+		LOGINFO("CTRL_HOT_KEY_CAPTURE", 1);
 		ret = 1;
 		g_showTip = !g_showTip;
 		g_catched_window = GetCursorPosWindow();
@@ -698,6 +744,7 @@ LRESULT CMainDlg::OnHotkeyLL(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BO
 		TipWindow();
 		
 	}else if (wParam == CTRL_HOT_KEY_POPMENU) {
+		LOGINFO("CTRL_HOT_KEY_POPMENU", 1);
 		if(g_showTip){
 			ret = 1;
 			CPopSysMenu::getInstance()->Show(!CPopSysMenu::getInstance()->IsShow());
@@ -705,6 +752,7 @@ LRESULT CMainDlg::OnHotkeyLL(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BO
 		}
 	}
 	else if (wParam == CTRL_HOT_KEY_MWND) {
+		LOGINFO("CTRL_HOT_KEY_MWND", 1);
 		ret = 1;
 		IsWindowVisible() ? ShowWindow(SW_HIDE) : APIS::Sys.WINDOW.ActivateWindow(m_hWnd);
 		
@@ -719,21 +767,21 @@ LRESULT CMainDlg::OnHotkeyLL(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BO
 		string is = str;
 		if (is == TXT_OK) {
 			ret = 1;
-			SendMessage(m_hWnd, WM_COMMAND, IDC_BTN_SET_CAPTURE_KEY, 0);
+			SendMessage(m_hWnd, WM_COMMAND, IDC_BTN_SET_CAPTURE_KEY, CANCEL_SET);
 		}
 
 		CMainDlg::m_btn_popmenu_set.GetWindowText(str, sizeof(str));
 		is = str;
 		if (is == TXT_OK) {
 			ret = 1;
-			SendMessage(m_hWnd, WM_COMMAND, IDC_BTN_SET_POPMENU_KEY, 0);
+			SendMessage(m_hWnd, WM_COMMAND, IDC_BTN_SET_POPMENU_KEY, CANCEL_SET);
 		}
 
 		CMainDlg::m_btn_mwnd_set.GetWindowText(str, sizeof(str));
 		is = str;
 		if (is == TXT_OK) {
 			ret = 1;
-			SendMessage(m_hWnd, WM_COMMAND, IDC_BTN_SET_MWND_KEY, 0);
+			SendMessage(m_hWnd, WM_COMMAND, IDC_BTN_SET_MWND_KEY, CANCEL_SET);
 		}
 
 	}else if (wParam == CTRL_HOT_KEY_K) {
@@ -798,7 +846,7 @@ LRESULT CMainDlg::OnBnClickedBtnHide(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 }
 
 
-LRESULT CMainDlg::OnBnClickedBtnSetMwndKey(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+LRESULT CMainDlg::OnBnClickedBtnSetMwndKey(WORD /*wNotifyCode*/, WORD /*wID*/, HWND hWndCtl, BOOL& /*bHandled*/)
 {
 	TCHAR str[MAX_PATH] = { NULL };
 	m_btn_mwnd_set.GetWindowText(str, sizeof(str));
@@ -808,10 +856,16 @@ LRESULT CMainDlg::OnBnClickedBtnSetMwndKey(WORD /*wNotifyCode*/, WORD /*wID*/, H
 		m_btn_mwnd_set.SetWindowText(val.c_str());
 		m_btn_popmenu_set.EnableWindow(TRUE);
 		m_btn_capture_set.EnableWindow(TRUE);
-
-		m_label_mwnd_key.GetWindowText(str, sizeof(str));
-		APIS::Keybd.SetHotKeys(m_hWnd, KEYS_MWND, CTRL_HOT_KEY_MWND, str);
-		APIS::Config.SetValue(COMMONSET, MWND_HOTKEY, str);
+		m_btn_hide.EnableWindow(TRUE);
+		if ((DWORD)hWndCtl == CANCEL_SET) {
+			val = APIS::Config.GetValue(COMMONSET, MWND_HOTKEY);
+			m_label_mwnd_key.SetWindowText(val.c_str());
+		}
+		else {
+			m_label_mwnd_key.GetWindowText(str, sizeof(str));
+			APIS::Keybd.SetHotKeys(m_hWnd, KEYS_MWND, CTRL_HOT_KEY_MWND, str);
+			APIS::Config.SetValue(COMMONSET, MWND_HOTKEY, str);
+		}
 
 	}
 	else {
@@ -819,6 +873,7 @@ LRESULT CMainDlg::OnBnClickedBtnSetMwndKey(WORD /*wNotifyCode*/, WORD /*wID*/, H
 		m_btn_mwnd_set.SetWindowText(TXT_OK);
 		m_btn_popmenu_set.EnableWindow(FALSE);
 		m_btn_capture_set.EnableWindow(FALSE);
+		m_btn_hide.EnableWindow(FALSE);
 	}
 	return 0;
 }

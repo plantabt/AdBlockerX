@@ -331,7 +331,7 @@ DWORD CSysApi::tagPROCESS::GetProcessId(const string& filePath)
 	HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	if (hSnapshot == INVALID_HANDLE_VALUE)
 	{
-		std::cout << "Failed to create snapshot. Error code: " << GetLastError() << std::endl;
+		cout << "Failed to create snapshot. Error code: " << GetLastError() << endl;
 		return 0;
 	}
 
@@ -350,7 +350,7 @@ DWORD CSysApi::tagPROCESS::GetProcessId(const string& filePath)
 				//if (IsWow64Process(hProcess, &is32Bit) && is32Bit)
 				{
 					TCHAR lpExePath[MAX_PATH] = { NULL };
-					DWORD exePathlen;
+					// DWORD exePathlen;
 					//QueryFullProcessImageName(hProcess, 0, lpExePath, &exePathlen);
 					// 匹配进程名
 					if (string(pe32.szExeFile) == filePath)
@@ -676,6 +676,7 @@ string CSysApi::tagRES::GetApplicationVersion()
 
 		return strVersion;
 	}
+	return "";
 }
 string CSysApi::tagRES::VER_COMPANY_NAME = "CompanyName";
 string CSysApi::tagRES::VER_FILE_DESCRIPTION = "FileDescription";
@@ -841,7 +842,28 @@ bool CSysApi::tagSYSTEM::RemoveFromStartup(const string &startname)
 
 	return false;
 }
+string CSysApi::tagSYSTEM::GetCurrentTimestamp() {
+	// 获取当前时间戳
+	SYSTEMTIME sysTime;
+	GetLocalTime(&sysTime);
 
+	// 获取毫秒数
+	SYSTEMTIME sysTimeWithMilliseconds;
+	GetSystemTime(&sysTimeWithMilliseconds);
+	int milliseconds = sysTimeWithMilliseconds.wMilliseconds;
+
+	// 构建日期时间字符串
+	std::ostringstream oss;
+	oss << std::setfill('0') << std::setw(4) << sysTime.wYear << "/";
+	oss << std::setfill('0') << std::setw(2) << sysTime.wMonth << "/";
+	oss << std::setfill('0') << std::setw(2) << sysTime.wDay << " ";
+	oss << std::setfill('0') << std::setw(2) << sysTime.wHour << ":";
+	oss << std::setfill('0') << std::setw(2) << sysTime.wMinute << ":";
+	oss << std::setfill('0') << std::setw(2) << sysTime.wSecond << ".";
+	oss << std::setfill('0') << std::setw(3) << milliseconds;
+
+	return oss.str();
+}
 vector<string> CSysApi::tagSYSTEM::GetCommandLineArguments()
 {
 	vector<string> arguments;

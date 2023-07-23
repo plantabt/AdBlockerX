@@ -162,8 +162,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,2,2,7
- PRODUCTVERSION 1,2,2,7
+ FILEVERSION 1,2,3,0
+ PRODUCTVERSION 1,2,3,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -180,12 +180,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "替计划实验室 - PLAN T LABS"
             VALUE "FileDescription", "AdBlockerX Module"
-            VALUE "FileVersion", "1.2.2.7"
+            VALUE "FileVersion", "1.2.3.0"
             VALUE "InternalName", "AdBlockerX"
             VALUE "LegalCopyright", "Copyright 2023"
             VALUE "OriginalFilename", "AdBlockerX.exe"
             VALUE "ProductName", "AdBlockerX Module"
-            VALUE "ProductVersion", "1.2.2.7"
+            VALUE "ProductVersion", "1.2.3.0"
         END
     END
     BLOCK "VarFileInfo"

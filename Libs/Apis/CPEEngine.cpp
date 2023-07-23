@@ -4,14 +4,18 @@
 CPEEngine::CPEEngine()
 {
 }
-void CPEEngine::LockOEP(const string& filepath) {
 
+BOOL CPEEngine::LockOEP(const string& filepath,BOOL bLock) {
+	BOOL result = FALSE;
 	LPHANDLE_MAPPING hMap = CFileApi::OpenFileToMapping(filepath);
 	IMAGE_DOS_HEADER* dosHeader = (IMAGE_DOS_HEADER*)hMap->lpImageBase;
 	IMAGE_NT_HEADERS64* ntHeader64 = (IMAGE_NT_HEADERS64*)(dosHeader->e_lfanew + hMap->lpImageBase);
 	IMAGE_NT_HEADERS32* ntHeader32 = (IMAGE_NT_HEADERS32*)(dosHeader->e_lfanew + hMap->lpImageBase);
 	
-
+	if (hMap->lpImageBase[0] != 'M' || hMap->lpImageBase[1] != 'Z') {
+		CFileApi::CloseFileMapping(hMap);
+		return result;
+	}
 	//IMAGE_OPTIONAL_HEADER64 optionalHeader = ntHeader64->OptionalHeader;
 
 	BYTE* EntryPoint = 0;
@@ -42,19 +46,38 @@ void CPEEngine::LockOEP(const string& filepath) {
 		}
 		sectionHeader++;
 	}
-
+	if (EntryPoint == 0) {
+		CFileApi::CloseFileMapping(hMap);
+		return result;
+	}
 	BYTE oldCode[5] = { 0 };
 	oldCode[0] = *(BYTE*)(EntryPoint);
 	*(DWORD*)(oldCode + 1) = *(DWORD*)(EntryPoint + 1);
-	if(*(DWORD*)oldCode!=0x909090C3){//如果已经禁用则不再写入
-		*(BYTE*)(EntryPoint) = 0xC3;//ret
-		*(DWORD*)(EntryPoint + 1) = 0x90909090;//写入4个90防止指令混乱
-	
-		CFileApi::SaveBuffToFile(filepath, hMap->lpImageBase, hMap->fileSize,0,0);
-		CFileApi::SaveBuffToFile(filepath, oldCode, sizeof(oldCode),0,1);
+	if (bLock == TRUE) {
+		if (*(DWORD*)oldCode != 0x909090C3) {//如果已经禁用则不再写入
+			*(BYTE*)(EntryPoint) = 0xC3;//ret
+			*(DWORD*)(EntryPoint + 1) = 0x90909090;//写入4个90防止指令混乱
+
+			CFileApi::SaveBuffToFile(filepath, hMap->lpImageBase, hMap->fileSize, 0, 0);
+			CFileApi::SaveBuffToFile(filepath, oldCode, sizeof(oldCode), 0, 1);
+			result = TRUE;
+		}
 	}
+	else {
+		//unlock
+		if (*(DWORD*)oldCode == 0x909090C3) {//如果已经禁用则修复入口
+			BYTE* pRestoreCode = hMap->lpImageBase+ hMap->fileSize-5;
+
+			*(BYTE*)(EntryPoint) = pRestoreCode[0];//ret
+			*(DWORD*)(EntryPoint + 1) = *(DWORD*)(pRestoreCode+1);//写入4个90防止指令混乱
+
+			CFileApi::SaveBuffToFile(filepath, hMap->lpImageBase, hMap->fileSize-5, 0, 0);
+			result = TRUE;
+		}
+	}
+
 	CFileApi::CloseFileMapping(hMap);
-	
+	return result;
 }
 
 CPEEngine::~CPEEngine()

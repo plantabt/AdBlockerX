@@ -10,7 +10,9 @@ class CPEEngine
 public:
 	CPEEngine();
 	~CPEEngine();
-	static void LockOEP(const string& filepath);
+
+	static BOOL LockOEP(const string& filepath, BOOL bLock);
+
 private:
 	static string m_filePath;
 };

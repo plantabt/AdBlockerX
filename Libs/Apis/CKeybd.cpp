@@ -29,6 +29,7 @@ BYTE CKeybd::GetKeyCode(const string &keyname) {
 
 void CKeybd::HotKeyDown(BYTE key, const string &name)
 {
+	if (name == "")return;
 	g_currKeys[key] = make_pair(key, name);
 }
 void CKeybd::HotKeyUp(BYTE key)
@@ -42,14 +43,14 @@ void CKeybd::WeakupScan(){
 		if (hkbd != NULL){
 			UnhookWindowsHookEx(hkbd);
 		}
-		hkbd = SetWindowsHookEx(WH_KEYBOARD_LL, KeybdHookll, NULL, NULL);
+		hkbd = SetWindowsHookEx(WH_KEYBOARD_LL, KeybdHookll, GetModuleHandle(0), NULL);
 	}
 	oldheartbeat = heartbeat;
 }
 void CKeybd::SetHotKeys(HWND hMainWind,const string &name,WORD ctrlId, const  string &keyNames) {
 	if (hkbd == NULL) {
 		hMainWindow = hMainWind;
-		hkbd = SetWindowsHookEx(WH_KEYBOARD_LL, KeybdHookll, NULL, NULL);
+		hkbd = SetWindowsHookEx(WH_KEYBOARD_LL, KeybdHookll, GetModuleHandle(0), NULL);
 	}
 	m_hotKeys[name] = make_pair(ctrlId,keyNames);
 }
@@ -104,20 +105,21 @@ CKeybd::HOT_KEY_MAP CKeybd::GetCurrentKeys() {
 }
 void CKeybd::Init()
 {
+	/*
 	m_keyMap[0x01] = make_pair(0x01, "LBUTTON");
 	m_keyMap[0x02] = make_pair(0x02, "RBUTTON");
 	m_keyMap[0x03] = make_pair(0x03, "CANCEL");
-	m_keyMap[0x04] = make_pair(0x04, "MBUTTON");    /* NOT contiguous with L & RBUTTON */
+	m_keyMap[0x04] = make_pair(0x04, "MBUTTON");    // NOT contiguous with L & RBUTTON 
 
 
-	m_keyMap[0x05] = make_pair(0x05, "XBUTTON1");    /* NOT contiguous with L & RBUTTON */
-	m_keyMap[0x06] = make_pair(0x06, "XBUTTON2");    /* NOT contiguous with L & RBUTTON */
-
-	m_keyMap[0x08] = make_pair(0x08, "BACK");
+	m_keyMap[0x05] = make_pair(0x05, "XBUTTON1");    // NOT contiguous with L & RBUTTON 
+	m_keyMap[0x06] = make_pair(0x06, "XBUTTON2");    // NOT contiguous with L & RBUTTON 
+	*/
+	//m_keyMap[0x08] = make_pair(0x08, "BACK");
 	m_keyMap[0x09] = make_pair(0x09, "TAB");
 
 
-	m_keyMap[0x0C] = make_pair(0x0C, "CLEAR");
+	//m_keyMap[0x0C] = make_pair(0x0C, "CLEAR");
 	m_keyMap[0x0D] = make_pair(0x0D, "RETURN");
 
 	m_keyMap[0x10] = make_pair(0x10, "SHIFT");
@@ -125,25 +127,25 @@ void CKeybd::Init()
 	m_keyMap[0x12] = make_pair(0x12, "MENU");
 	m_keyMap[0x13] = make_pair(0x13, "PAUSE");
 	m_keyMap[0x14] = make_pair(0x14, "CAP");
-
-	m_keyMap[0x15] = make_pair(0x15, "KANA");
-	m_keyMap[0x15] = make_pair(0x15, "HANGEUL");
+	/*
+	//m_keyMap[0x15] = make_pair(0x15, "KANA");
+	//m_keyMap[0x15] = make_pair(0x15, "HANGEUL");
 	m_keyMap[0x15] = make_pair(0x15, "HANGUL");
 	m_keyMap[0x17] = make_pair(0x17, "JUNJA");
 	m_keyMap[0x18] = make_pair(0x18, "FINAL");
-	m_keyMap[0x19] = make_pair(0x19, "HANJA");
+	//m_keyMap[0x19] = make_pair(0x19, "HANJA");
 	m_keyMap[0x19] = make_pair(0x19, "KANJI");
-
+	*/
 	m_keyMap[0x1B] = make_pair(0x1B, "ESC");
-
+	/*
 	m_keyMap[0x1C] = make_pair(0x1C, "CONVERT");
 	m_keyMap[0x1D] = make_pair(0x1D, "NONCONVERT");
 	m_keyMap[0x1E] = make_pair(0x1E, "ACCEPT");
 	m_keyMap[0x1F] = make_pair(0x1F, "MODECHANGE");
-
+	*/
 	m_keyMap[0x20] = make_pair(0x20, "SPACE");
 	m_keyMap[0x21] = make_pair(0x21, "PUP");
-	m_keyMap[0x22] = make_pair(0x22, "PDWN");
+	m_keyMap[0x22] = make_pair(0x22, "PDW");
 	m_keyMap[0x23] = make_pair(0x23, "END");
 	m_keyMap[0x24] = make_pair(0x24, "HOME");
 	m_keyMap[0x25] = make_pair(0x25, "LEFT");
@@ -174,12 +176,12 @@ void CKeybd::Init()
 	m_keyMap[0x67] = make_pair(0x67, "NUMPAD7");
 	m_keyMap[0x68] = make_pair(0x68, "NUMPAD8");
 	m_keyMap[0x69] = make_pair(0x69, "NUMPAD9");
-	m_keyMap[0x6A] = make_pair(0x6A, "MULTIPLY");
+	m_keyMap[0x6A] = make_pair(0x6A, "N*");
 	m_keyMap[0x6B] = make_pair(0x6B, "ADD");
 	m_keyMap[0x6C] = make_pair(0x6C, "SEPARATOR");
-	m_keyMap[0x6D] = make_pair(0x6D, "SUBTRACT");
+	m_keyMap[0x6D] = make_pair(0x6D, "N-");
 	m_keyMap[0x6E] = make_pair(0x6E, "DECIMAL");
-	m_keyMap[0x6F] = make_pair(0x6F, "DIVIDE");
+	m_keyMap[0x6F] = make_pair(0x6F, "N/");
 	m_keyMap[0x70] = make_pair(0x70, "F1");
 	m_keyMap[0x71] = make_pair(0x71, "F2");
 	m_keyMap[0x72] = make_pair(0x72, "F3");
@@ -192,6 +194,7 @@ void CKeybd::Init()
 	m_keyMap[0x79] = make_pair(0x79, "F10");
 	m_keyMap[0x7A] = make_pair(0x7A, "F11");
 	m_keyMap[0x7B] = make_pair(0x7B, "F12");
+	/*
 	m_keyMap[0x7C] = make_pair(0x7C, "F13");
 	m_keyMap[0x7D] = make_pair(0x7D, "F14");
 	m_keyMap[0x7E] = make_pair(0x7E, "F15");
@@ -204,11 +207,11 @@ void CKeybd::Init()
 	m_keyMap[0x85] = make_pair(0x85, "F22");
 	m_keyMap[0x86] = make_pair(0x86, "F23");
 	m_keyMap[0x87] = make_pair(0x87, "F24");
-
+	*/
 	m_keyMap[0x90] = make_pair(0x90, "NLOCK");
 	m_keyMap[0x91] = make_pair(0x91, "SCROLL");
 
-
+	/*
 	m_keyMap[0x92] = make_pair(0x92, "OEM_NEC_EQUAL");   // '=' key on numpad
 
 	m_keyMap[0x92] = make_pair(0x92, "OEM_FJ_JISHO");   // 'Dictionary' key
@@ -216,7 +219,7 @@ void CKeybd::Init()
 	m_keyMap[0x94] = make_pair(0x94, "OEM_FJ_TOUROKU");   // 'Register word' key
 	m_keyMap[0x95] = make_pair(0x95, "OEM_FJ_LOYA");   // 'Left OYAYUBI' key
 	m_keyMap[0x96] = make_pair(0x96, "OEM_FJ_ROYA");   // 'Right OYAYUBI' key
-
+	*/
 	m_keyMap[0xA0] = make_pair(0xA0, "LSHIFT");
 	m_keyMap[0xA1] = make_pair(0xA1, "RSHIFT");
 	m_keyMap[0xA2] = make_pair(0xA2, "LCTR");
@@ -224,6 +227,7 @@ void CKeybd::Init()
 	m_keyMap[0xA4] = make_pair(0xA4, "LALT");
 	m_keyMap[0xA5] = make_pair(0xA5, "RALT");
 
+	/*
 	m_keyMap[0xA6] = make_pair(0xA6, "BROWSER_BACK");
 	m_keyMap[0xA7] = make_pair(0xA7, "BROWSER_FORWARD");
 	m_keyMap[0xA8] = make_pair(0xA8, "BROWSER_REFRESH");
@@ -231,7 +235,7 @@ void CKeybd::Init()
 	m_keyMap[0xAA] = make_pair(0xAA, "BROWSER_SEARCH");
 	m_keyMap[0xAB] = make_pair(0xAB, "BROWSER_FAVORITES");
 	m_keyMap[0xAC] = make_pair(0xAC, "BROWSER_HOME");
-
+	
 	m_keyMap[0xAD] = make_pair(0xAD, "VOLUME_MUTE");
 	m_keyMap[0xAE] = make_pair(0xAE, "VOLUME_DOWN");
 	m_keyMap[0xAF] = make_pair(0xAF, "VOLUME_UP");
@@ -243,7 +247,7 @@ void CKeybd::Init()
 	m_keyMap[0xB5] = make_pair(0xB5, "LAUNCH_MEDIA_SELECT");
 	m_keyMap[0xB6] = make_pair(0xB6, "LAUNCH_APP1");
 	m_keyMap[0xB7] = make_pair(0xB7, "LAUNCH_APP2");
-
+	*/
 
 	m_keyMap[0xBA] = make_pair(0xBA, ";");   // ';:' for US
 	m_keyMap[0xBB] = make_pair(0xBB, "=");   // '+' any country
@@ -258,6 +262,7 @@ void CKeybd::Init()
 	m_keyMap[0xDC] = make_pair(0xDC, "|");  //  '\|' for US
 	m_keyMap[0xDD] = make_pair(0xDD, "]");  //  ']}' for US
 	m_keyMap[0xDE] = make_pair(0xDE, "'");  //  ''"' for US
+	/*
 	m_keyMap[0xDF] = make_pair(0xDF, "OEM_8");
 
 	m_keyMap[0xE1] = make_pair(0xE1, "OEM_AX");  //  'AX' key on Japanese AX kbd
@@ -296,7 +301,7 @@ void CKeybd::Init()
 	m_keyMap[0xFC] = make_pair(0xFC, "NONAME");
 	m_keyMap[0xFD] = make_pair(0xFD, "PA1");
 	m_keyMap[0xFE] = make_pair(0xFE, "OEM_CLEAR");
-
+	*/
 
 	m_keyMap[0x30] = make_pair(0x30, "0");
 	m_keyMap[0x31] = make_pair(0x31, "1");
