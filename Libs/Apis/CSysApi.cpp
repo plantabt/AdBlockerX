@@ -768,9 +768,11 @@ string CSysApi::tagSYSTEM::GetAppFullPath() {
 	return path;
 }
 string CSysApi::tagSYSTEM::GetCurrentDir() {
-	TCHAR path[MAX_PATH] = { NULL };
-	::GetCurrentDirectory(sizeof(path), path);
-	return path;
+
+	string fullpath = GetAppFullPath();
+	fullpath = CFileApi::GetFilePathFromFullpath(fullpath);
+	// ::GetCurrentDirectory(sizeof(path), path);
+	return fullpath;
 }
 bool CSysApi::tagSYSTEM::IsAnotherInstanceRunning(const string& appName)
 {
@@ -844,6 +846,7 @@ bool CSysApi::tagSYSTEM::RemoveFromStartup(const string &startname)
 }
 string CSysApi::tagSYSTEM::GetCurrentTimestamp() {
 	// 获取当前时间戳
+
 	SYSTEMTIME sysTime;
 	GetLocalTime(&sysTime);
 
@@ -853,6 +856,8 @@ string CSysApi::tagSYSTEM::GetCurrentTimestamp() {
 	int milliseconds = sysTimeWithMilliseconds.wMilliseconds;
 
 	// 构建日期时间字符串
+	TCHAR forTime[60]{ 0 };
+	/*
 	std::ostringstream oss;
 	oss << std::setfill('0') << std::setw(4) << sysTime.wYear << "/";
 	oss << std::setfill('0') << std::setw(2) << sysTime.wMonth << "/";
@@ -861,8 +866,10 @@ string CSysApi::tagSYSTEM::GetCurrentTimestamp() {
 	oss << std::setfill('0') << std::setw(2) << sysTime.wMinute << ":";
 	oss << std::setfill('0') << std::setw(2) << sysTime.wSecond << ".";
 	oss << std::setfill('0') << std::setw(3) << milliseconds;
+	*/
+	wsprintf(forTime, "%d/%d/%d %d:%d:%d.%d", sysTime.wYear, sysTime.wMonth, sysTime.wDay, sysTime.wHour, sysTime.wMinute, sysTime.wSecond, milliseconds);
 
-	return oss.str();
+	return forTime;
 }
 vector<string> CSysApi::tagSYSTEM::GetCommandLineArguments()
 {

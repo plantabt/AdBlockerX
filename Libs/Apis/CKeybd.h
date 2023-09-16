@@ -8,6 +8,7 @@
 #include "CStringApi.h"
 #include "CDynamicBuffer.h"
 #include "CSysApi.h"
+#include "CFileApi.h"
 #define WM_HOTKEY_LL WM_USER*2
 struct CompareGreater
 {
@@ -38,6 +39,7 @@ private:
 	static HHOOK hkbd;
 	static HWND hMainWindow;
 	static void HotKeyDown(BYTE key, const string &name);
+	static void ResetKeyStatus();
 	static void HotKeyUp(BYTE key);
 	
 };

@@ -1,6 +1,7 @@
 #pragma once
 #include "common.h"
 #include "CStringApi.h"
+#include "CFileApi.h"
 #include <tlhelp32.h>
 class CSysApi
 {

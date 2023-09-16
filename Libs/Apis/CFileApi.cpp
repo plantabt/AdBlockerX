@@ -74,6 +74,14 @@ TCHAR* CFileApi::GetFileNameFromePath(TCHAR* filePath, bool hasExt)
 
 	return p;
 }
+string CFileApi::GetFilePathFromFullpath(const string filePath)
+{
+	TCHAR fileName[MAX_PATH] = { NULL };
+	TCHAR* p = 0;
+	p = StrRChr(filePath.c_str(), 0, '\\');
+	CopyMemory(fileName, filePath.c_str(), (p - filePath.c_str())+1);
+	return fileName;
+}
 BYTE* CFileApi::ReadFileToBuff(TCHAR* pfilepath, DWORD* rdSize)
 {
 	BYTE* pBuff = 0;

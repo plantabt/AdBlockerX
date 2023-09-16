@@ -46,7 +46,7 @@ BEGIN
 END
 
 IDD_MAINDLG DIALOGEX 0, 0, 142, 103
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CAPTION | WS_SYSMENU
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CENTER | WS_CAPTION | WS_SYSMENU
 CAPTION "AdBlockerX"
 FONT 9, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
@@ -162,8 +162,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,2,3,0
- PRODUCTVERSION 1,2,3,0
+ FILEVERSION 1,2,3,3
+ PRODUCTVERSION 1,2,3,3
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -180,12 +180,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "替计划实验室 - PLAN T LABS"
             VALUE "FileDescription", "AdBlockerX Module"
-            VALUE "FileVersion", "1.2.3.0"
+            VALUE "FileVersion", "1.2.3.3"
             VALUE "InternalName", "AdBlockerX"
             VALUE "LegalCopyright", "Copyright 2023"
             VALUE "OriginalFilename", "AdBlockerX.exe"
             VALUE "ProductName", "AdBlockerX Module"
-            VALUE "ProductVersion", "1.2.3.0"
+            VALUE "ProductVersion", "1.2.3.3"
         END
     END
     BLOCK "VarFileInfo"

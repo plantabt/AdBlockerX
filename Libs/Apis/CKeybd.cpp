@@ -26,7 +26,10 @@ BYTE CKeybd::GetKeyCode(const string &keyname) {
 	}
 	return -1;
 }
-
+void CKeybd::ResetKeyStatus() {
+	for(BYTE key =0; key <255; key++)
+	HotKeyUp(key);
+}
 void CKeybd::HotKeyDown(BYTE key, const string &name)
 {
 	if (name == "")return;
@@ -43,6 +46,8 @@ void CKeybd::WeakupScan(){
 		if (hkbd != NULL){
 			UnhookWindowsHookEx(hkbd);
 		}
+		//清理所有按键
+		ResetKeyStatus();
 		hkbd = SetWindowsHookEx(WH_KEYBOARD_LL, KeybdHookll, GetModuleHandle(0), NULL);
 	}
 	oldheartbeat = heartbeat;
@@ -319,5 +324,18 @@ void CKeybd::Init()
 		string ch =	CStringApi::Format("%c", cnt);
 		m_keyMap[cnt] = make_pair(cnt, ch);
 	}
-	
+	/*
+	for (auto i : m_keyMap) {
+
+		CFileApi::LogInfo("c:\\codes.txt", i.second.second + "_" + CStringApi::UInt2Str(i.second.first) + " db \"" + i.second.second + "\",0", 1);
+
+	}
+	for (auto i : m_keyMap) {
+		//CFileApi::LogInfo("c:\\codes.txt", i.second.second  + "_" + CStringApi::UInt2Str(i.second.first) + " db \"" + i.second.second + "\",0", 1);
+		string outCode = CStringApi::Format("ECInvoke SetStringMap, Addr g_KeyMAP, %lu, Addr %s_%lu, SizeOf %s_%lu", i.second.first, i.second.second.c_str(), i.second.first, i.second.second.c_str(), i.second.first);
+		CFileApi::LogInfo("c:\\codes.txt", outCode, 1);
+
+
+	}
+	*/
 }

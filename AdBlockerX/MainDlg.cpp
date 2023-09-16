@@ -79,12 +79,11 @@ static DWORD heartbeat = 1, oldheartbeat = 0;
 bool IsMsg = false;
 
 
-LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+LRESULT CMainDlg::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	
+	LRESULT lRet = CAxDialogImpl<CMainDlg>::OnInitDialog(uMsg, wParam, lParam, bHandled);
+
 	APIS::Sys.PROCESS.EnableDebugPrivilege();
-	
-	
 
 	gMainDlg = this;
 
@@ -100,8 +99,11 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	g_tipDlg = ::CreateDialog(NULL, MAKEINTRESOURCE(IDD_TIP_WINDOW), 0, TipDlgProc);
 
 	::SetWindowLongPtr(g_tipDlg, GWL_EXSTYLE, ::GetWindowLongPtr(g_tipDlg, GWL_EXSTYLE) | WS_EX_TOOLWINDOW );//524288
-
+#ifndef _DEBUG
 	gMouseHook = SetWindowsHookEx(WH_MOUSE_LL, MouseHookCallback, GetModuleHandle(0), 0);
+#else
+	//gMouseHook = SetWindowsHookEx(WH_MOUSE_LL, MouseHookCallback, GetModuleHandle(0), 0);
+#endif
 	
 	
 	string exePath = APIS::Sys.PROCESS.GetCurrentAppFullPath();
@@ -130,15 +132,10 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	m_label_upgrade = GetDlgItem(IDC_HREF_NEW_VER);
 	m_label_upgrade.SetLinkUri(PLTLABS_WEBSITE);
 
-	//获取第二个参数
-	string cfgPath = APIS::Sys.SYSTEM.GetCommandLineArgumentByIndex(1);
-	LOGINFO("cmdLine:"+ cfgPath, 1);
 
-	if (cfgPath == "") {
-		cfgPath = APIS::Sys.SYSTEM.GetCurrentDir() ;
-	}
-	
-	cfgPath = APIS::Strings.Format("%s\\%s", cfgPath.c_str(), CONFIG_FILE);
+	string	cfgPath = APIS::Sys.SYSTEM.GetCurrentDir() ;
+
+	cfgPath = APIS::Strings.Format("%s%s", cfgPath.c_str(), CONFIG_FILE);
 	LOGINFO("cfgPath:" + cfgPath, 1);
 
 	APIS::Config.Init(cfgPath);
@@ -146,7 +143,9 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 	ReadConfig();
 	if (m_chk_add_startup.GetCheck()) {
-		APIS::Sys.WINDOW.HideWindow(m_hWnd); 
+		
+		//APIS::Sys.WINDOW.HideWindow(m_hWnd);
+		ShowWindow(SW_HIDE);
 	}
 	else {
 		ShowWindow(SW_SHOW);
@@ -155,7 +154,7 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 	DragAcceptFiles(TRUE);
 	CreateThread(0, 0, (LPTHREAD_START_ROUTINE)ThreadUpdateProc, 0, 0, 0);
-	return TRUE;
+	return lRet;
 }
 CMainDlg::CMainDlg(){
 	

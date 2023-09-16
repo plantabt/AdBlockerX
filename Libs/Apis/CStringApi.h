@@ -11,6 +11,8 @@ class CStringApi
 {
 
 	public:
+		static string UInt2Str(UINT64 uintvalue);
+		static string Int2Str(int intvalue);
 		static string StringToLower(string strin);
 		static int IndexOf(const string& src, const string& search);
 		static CHAR* pNextPointer;

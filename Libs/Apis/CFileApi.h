@@ -74,6 +74,7 @@ public:
 	static DWORD GetFileSizeExt(TCHAR* pfilepath);
 	static BOOL SaveBuffToFile(const string& pfilepath, BYTE* in, DWORD inSize,  BOOL bCreateNew=TRUE,  BOOL bAppend = FALSE);
 	static TCHAR* GetFileNameFromePath(TCHAR* filePath, bool hasExt);
+	static string GetFilePathFromFullpath(const string filePath);
 	static BOOL IsFileExist(const string& filePath);
 	static LPHANDLE_MAPPING OpenFileToMapping(const string& filePath);
 	static void CloseFileMapping(LPHANDLE_MAPPING hMpping);

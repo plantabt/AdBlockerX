@@ -263,6 +263,12 @@ string CStringApi::ReplaceUnEchoStrToC(TCHAR* strBuf, DWORD strLen) {
 int CStringApi::IndexOf(const string &src, const string& search) {
 	return src.find(search);
 }
+string CStringApi::UInt2Str(UINT64 uintValue) {
+	return Format("%lu", uintValue);
+}
+string CStringApi::Int2Str(int intValue) {
+	return Format("%d", intValue);
+}
 string CStringApi::StringToLower(string strin) {
 	
 	transform(strin.begin(), strin.end(), strin.begin(), [](unsigned char c) {return tolower(c); });
