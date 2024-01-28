@@ -12,3 +12,8 @@ website:www.plt-labs.com
 注意：必须先alt+w开启捕捉器
 alt+x呼出功能菜单
 alt+m呼出设置窗口
+
+AdBlockerX Visual Studio C++ 2019 + WTL website: www.plt-labs.com. Not for commercial use, do not use to damage computer systems. Development environment: VS2019. This is a see-and-kill tool. If you encounter strange program pop-ups, program freezing, or disabled window controls, move your mouse over the program window. This allows you to locate the mysterious pop-up program or kill them, or even prevent them from executing. It also enables unclickable buttons or controls.
+
+Enable/Disable buttons 2. Locate pop-up programs 3. Kill specific processes 4. Prevent specific programs from starting
+Note: You must first use Alt+W to activate the catcher, Alt+X to call out the function menu, and Alt+M to call out the settings window.
